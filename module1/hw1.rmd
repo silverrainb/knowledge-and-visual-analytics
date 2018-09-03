@@ -1,0 +1,204 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+<style>
+p.comment {
+background-color: #DBDBDB;
+padding: 10px;
+border: 1px solid black;
+margin-left: 25px;
+border-radius: 5px;
+font-style: italic;
+}
+</style>
+
+<div class='alert alert-info'>
+## Homework 1
+#### Knowledge and Visual Analytics
+##### CUNY MSDS DATA 608, Fall 2018
+
+### Rose Koh
+##### 09/03/2018
+</div>
+
+## {.tabset}
+
+```{r include=FALSE}
+# Environment set up
+library(ggplot2)
+library(dplyr)
+library(data.table)
+library(scales)
+```
+
+### Intro
+
+**Principles of Data Visualization and Introduction to ggplot2**
+
+I have provided you with data about the 5,000 fastest growing companies in the US, as compiled by Inc. magazine. lets read this in:
+
+```{r}
+
+inc <- read.csv("https://raw.githubusercontent.com/charleyferrari/CUNY_DATA_608/master/module1/Data/inc5000_data.csv", header= TRUE)
+
+```
+
+And lets preview this data:
+
+```{r}
+
+head(inc)
+
+```
+```{r}
+
+summary(inc)
+
+```
+
+Think a bit on what these summaries mean. Use the space below to add some more relevant non-visual exploratory information you think helps you understand this data:
+
+### Non-Visual EDA
+```{r}
+inc <- as.data.table(inc)
+
+# list rows of data that have missing values 
+inc[!complete.cases(inc),]
+new.inc <- na.omit(inc)
+
+# growth rate summary by indsutry
+head(arrange(new.inc[, .(mean_growth_rate = mean(Growth_Rate),
+                median_growth_rate = median(Growth_Rate),
+                min_growth_rate = min(Growth_Rate),
+                max_growth_rate = max(Growth_Rate)), by = .(Industry)], desc(mean_growth_rate)),10)
+
+# revenue summary by industry
+head(arrange(new.inc[, .(mean_rev = mean(Revenue),
+            median_rev = median(Revenue),
+            min_rev = min(Revenue),
+            max_rev = max(Revenue)), by = .(Industry)], desc(mean_rev)),10)
+
+# number of employees by industry
+head(arrange(new.inc[, .(sum_employee = sum(Employees),
+                    mean_employee = mean(Employees),
+                    min_employee = min(Employees),
+                    max_employee = max(Employees)), by =.(Industry)], desc(sum_employee)),10)
+
+# number of cities by industry
+head(arrange(new.inc[, .(count = length(unique(City))), by =.(Industry)], desc(count)),10)
+
+# number of state by industry
+head(arrange(new.inc[, .(count = length(unique(State))), by =.(Industry)], desc(count)),10)
+
+# number of cities by state
+head(arrange(new.inc[, .(count = length(unique(City))), by =.(State)], desc(count)),10)
+
+# number of companies by industry
+head(arrange(new.inc[, .(count = length(unique(Name))), by = .(Industry)], desc(count)),10)
+
+# number of companies by cities
+head(arrange(new.inc[, .(count = length(unique(Name))), by = .(City)], desc(count)),10)
+
+# number of companies by state
+head(arrange(new.inc[, .(count = length(unique(Name))), by = .(State)], desc(count)),10)
+```
+
+### Question 1
+
+Create a graph that shows the distribution of companies in the dataset by State (ie how many are in each state). There are a lot of States, so consider which axis you should use. This visualization is ultimately going to be consumed on a 'portrait' oriented screen (ie taller than wide), which should further guide your layout choices.
+
+```{r}
+data.1 <- arrange(inc[, .(num_of_companies = length(Name)), by =.(State)], desc(num_of_companies))
+
+plot1 <- ggplot(data.1, 
+                aes(reorder(State, num_of_companies), num_of_companies)) +
+  geom_point(size=0.5) + 
+  geom_segment(aes(x=State, xend=State, y=0, yend=num_of_companies)) +
+  geom_text(aes(label = paste0(num_of_companies, ",", State)),
+                  color = "red", size = 2, hjust = -0.1)+
+  scale_y_continuous(breaks = seq(0,800,100),labels = comma) +
+  labs(title = "Number Of Companies By State",
+       x = "State",
+       y = "Number Of Companies") +
+  coord_flip() +
+  theme_bw()
+
+plot1
+```
+
+```{r include=FALSE, message=FALSE}
+ggsave("plot1.png")
+```
+
+### Quesiton 2
+
+Lets dig in on the state with the 3rd most companies in the data set. Imagine you work for the state and are interested in how many people are employed by companies in different industries. Create a plot that shows the average and/or median employment by industry for companies in this state (only use cases with full data, use R's `complete.cases()` function.) In addition to this, your graph should show how variable the ranges are, and you should deal with outliers.
+
+```{r}
+#head(arrange(new.inc[, .(count = length(unique(Name))), by = .(State)], desc(count)),3)
+
+data.2 <- inc[complete.cases(inc),][State == 'NY']
+
+upper <- max(data.2$Employees)
+lower <- min(data.2$Employees)
+median.label <- paste0("Median Number of Employees(NY):  ", median(data.2$Employees))
+
+plot2 <- ggplot(data.2,aes(reorder(Industry, Employees, FUN=median), Employees)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_hline(yintercept = median(data.2$Employees),
+               color="red", 
+               linetype="dashed") +
+  scale_y_continuous(trans = log2_trans(), limits = c(lower, upper)) +
+  labs(title = "Number of Employees by Industry in the state of NY",
+     x = "Industry",
+     y = "Number of Employees, Log2 transform") +
+  geom_text(aes(x=1.5, label=median.label, y = 300), 
+            size = 3,
+            colour="red") +
+  theme_bw() + 
+  coord_flip()
+
+plot2
+```
+
+```{r include=FALSE, message=FALSE}
+ggsave("plot2.png")
+```
+
+### Question 3
+
+Now imagine you work for an investor and want to see which industries generate the most revenue per employee. Create a chart that makes this information clear. Once again, the distribution per industry should be shown.
+
+```{r}
+data.3 <- arrange(inc[complete.cases(inc),][, `:=`(RPE = Revenue/Employees)], desc(RPE))
+
+upper <- max(data.3$RPE)
+lower <- min(data.3$RPE)
+median.label <- paste0("Median Revenue Per Employees:  ", round(median(data.3$RPE),2))
+
+plot3 <- ggplot(data.3, aes(reorder(Industry, RPE, FUN=median), RPE)) +
+  geom_boxplot() +
+  geom_hline(yintercept = median(data.3$RPE),
+               color="red", 
+               linetype="dashed") +
+  scale_y_continuous(trans = log2_trans(), limits = c(lower, upper)) +
+  labs(title = "Revenue Per Employees Distribution Per Industry",
+     x = "Industry",
+     y = "Revenue Per Employees, Log2 transform") +
+  geom_text(aes(x=1.5, label=median.label, y = 4000000), 
+            size = 3,
+            colour="red") +
+  theme_bw() +
+  coord_flip()
+
+plot3
+```
+
+```{r include=FALSE, message=FALSE}
+ggsave("plot3.png")
+```
+
+
