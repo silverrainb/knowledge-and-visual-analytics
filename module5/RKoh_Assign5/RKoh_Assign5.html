@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RKoh_Assign5</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <script type="text/javascript" src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/novus/nvd3/v1.7.1/build/nv.d3.min.js"></script>
+</head>
+
+<body>
+<h1>Rose Koh - Assignment 5 </h1>>
+<h1>Knowledge and visual analytics</h1>
+<h1>CUNY MSDS DATA 608, Fall 2018</h1>
+
+<h2>Part 1</h2>
+<h3>1. Create a function to reverse any word that you type in. This can be typed into either an input box or an alert
+    box, and then print the result in a box or on the webpage.</h3>
+
+<!-- Input form 1-->
+<div>
+    <form name='reverse'>
+        <input type="text" size="14" name='raw'>
+        <input type="button" value="Reverse!" onClick=print_reverse()>
+    </form>
+
+    <!-- div to display q1 result -->
+    <div id="part1_1"></div>
+
+    <!-- functions to reverse string and print the results -->
+    <script type="text/javascript" src="script1.js"></script>
+</div>
+
+<div>
+    <h3>2. Create a function that takes an input number, and prints a table with the first 20 multiples of the number,
+        in order 5x4</h3>
+
+    <!--Input form 2-->
+    <form name="inputNumber">
+        <input id="n" type="number" size="5">
+        <input type="button" value="Print a table!" onClick="display_table();">
+    </form>
+    <br>
+
+    <!-- div to display q2 result -->
+    <div id="part1_2"></div>
+
+    <!-- functions to print a table from input -->
+    <script type="text/javascript" src="script2.js"></script>
+</div>
+</body>
+
+<body onload="loadData()">
+<div>
+    <h2>Part 2</h2>
+    <h3>Write a function to load the presidents.csv data and display the data as an html table.
+        Write a function that will return that president’s height & weight when you type it in.
+        This can be typed into either an input box or an alert box, and then print the result in a box or on the web
+        page.</h3>
+
+    <!-- Input form-->
+    <label for="presidentSearch">Search President Name for Height and Weight: </label>
+    <input type="search" class="form-control" id="presidentSearch" placeholder="Type the name of President">
+
+    <div id="datatable"></div>
+
+</div>
+
+<!-- Load script3.js-->
+<script type='text/javascript' src='script3.js'></script>
+</body>
+</html>
